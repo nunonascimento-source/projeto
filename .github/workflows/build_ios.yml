@@ -1,0 +1,50 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.10.0'
+        channel: 'stable'
+    
+    - name: Get dependencies
+      run: flutter pub get
+      working-directory: my_ios_app
+    
+    - name: Build iOS
+      run: flutter build ios --release --no-codesign
+      working-directory: my_ios_app
+    
+    - name: Create IPA
+      run: |
+        cd my_ios_app/build/ios/iphoneos
+        mkdir -p Payload
+        cp -r Runner.app Payload/
+        zip -r -q LuluApp.ipa Payload
+      working-directory: .
+    
+    - name: Upload to Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: my_ios_app/build/ios/iphoneos/LuluApp.ipa
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ios-build
+        path: my_ios_app/build/ios/iphoneos/LuluApp.ipa
+        retention-days: 30
