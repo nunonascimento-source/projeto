@@ -1,5 +1,5 @@
 [build]
-  command = ""
+  command = "echo 'Using pre-built files'"
   publish = "my_ios_app/build/web"
 
 [[redirects]]
