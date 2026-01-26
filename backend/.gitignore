@@ -1,0 +1,5 @@
+node_modules/
+measurements.db
+.env
+.env.local
+*.log
