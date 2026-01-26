@@ -1,6 +1,5 @@
 [build]
-  base = "my_ios_app"
-  command = "flutter build web --release"
+  command = "cd my_ios_app && flutter build web --release"
   publish = "my_ios_app/build/web"
 
 [[redirects]]
