@@ -119,25 +119,31 @@ class ApiService {
     }
 
     try {
+      print(
+        '[API] Uploading measurement: ${measurement.date} ${measurement.time}',
+      );
+      final body = jsonEncode({
+        'date': measurement.date.toIso8601String(),
+        'time': measurement.time,
+        'glicemia': measurement.glicemia,
+        'insulina': measurement.insulina,
+        'observations': measurement.observations,
+      });
+      print('[API] Upload body: $body');
+
       final response = await http.post(
         Uri.parse('$baseUrl/measurements'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $_token',
         },
-        body: jsonEncode({
-          // Persist date as ISO string so the backend accepts it consistently
-          'date': measurement.date.toIso8601String(),
-          'time': measurement.time,
-          'glicemia': measurement.glicemia,
-          'insulina': measurement.insulina,
-          'observations': measurement.observations,
-        }),
+        body: body,
       );
 
+      print('[API] Upload response: ${response.statusCode} - ${response.body}');
       return response.statusCode == 200;
     } catch (e) {
-      print('Error uploading measurement: $e');
+      print('[API] Error uploading measurement: $e');
       return false;
     }
   }
@@ -149,25 +155,31 @@ class ApiService {
     }
 
     if (_token == null) {
-      print('Not authenticated');
+      print('[API] Not authenticated for download');
       return [];
     }
 
     try {
+      print('[API] Downloading measurements with userId: $_userId');
       final response = await http.get(
         Uri.parse('$baseUrl/measurements'),
         headers: {'Authorization': 'Bearer $_token'},
       );
 
+      print('[API] Download response: ${response.statusCode}');
+      print('[API] Download body: ${response.body}');
+
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
+        print('[API] Downloaded ${data.length} measurements');
         return data.map((json) => Measurement.fromMap(json)).toList();
       } else if (response.statusCode == 401) {
+        print('[API] Session expired');
         await logout();
         throw Exception('Session expired');
       }
     } catch (e) {
-      print('Error downloading measurements: $e');
+      print('[API] Error downloading measurements: $e');
     }
 
     return [];
