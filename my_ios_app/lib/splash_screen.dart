@@ -1,4 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'measurement_form.dart';
+import 'measurements_list.dart';
+import 'utils/exit_app.dart';
+import 'auth_screen.dart';
+import 'services/api_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,13 +22,21 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigateToHome() async {
-    await Future.delayed(const Duration(seconds: 3), () {});
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const MyHomePage(title: 'Flutter Demo Home Page'),
-      ),
-    );
+    await Future.delayed(const Duration(seconds: 2), () {});
+
+    // Check if user is authenticated
+    final isAuthenticated = await ApiService.restoreSession();
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => isAuthenticated
+              ? const MyHomePage(title: 'Medição de Insulina')
+              : const AuthScreen(),
+        ),
+      );
+    }
   }
 
   @override
@@ -34,13 +49,27 @@ class _SplashScreenState extends State<SplashScreen> {
           children: [
             const Icon(Icons.medical_services, size: 100, color: Colors.white),
             const SizedBox(height: 20),
-            const Text(
-              'Medição de Insulina',
-              style: TextStyle(
-                fontSize: 24,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Lulu',
+                  style: TextStyle(
+                    fontFamily: 'Roboto',
+                    fontSize: 30,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'App',
+                  style: GoogleFonts.dancingScript(
+                    fontSize: 24,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             const CircularProgressIndicator(
@@ -75,25 +104,134 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        title: const Text('Lulu'),
+        backgroundColor: Colors.red,
+        foregroundColor: Colors.white,
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) async {
+              if (value == 'logout') {
+                await ApiService.logout();
+                if (mounted) {
+                  Navigator.of(context).pushReplacementNamed('/');
+                }
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem<String>(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Logout'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
+      backgroundColor: Colors.grey[50],
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('You have pushed the button this many times:'),
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+              widget.title,
+              style: const TextStyle(
+                fontFamily: 'Roboto',
+                fontSize: 34,
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
+            ),
+            const SizedBox(height: 60),
+            // Two buttons section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Nova Medição button
+                Column(
+                  children: [
+                    FloatingActionButton(
+                      onPressed: () async {
+                        final saved = await Navigator.push<bool?>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const MeasurementForm(),
+                          ),
+                        );
+                        if (!mounted) return;
+                        if (saved == true) {
+                          final messenger = ScaffoldMessenger.of(context);
+                          messenger.removeCurrentSnackBar();
+                          messenger.showSnackBar(
+                            const SnackBar(content: Text('Dados guardados')),
+                          );
+                          // Refresh the state
+                          setState(() {});
+                        }
+                      },
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      child: const Icon(Icons.add),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text('Nova medição'),
+                  ],
+                ),
+                const SizedBox(width: 60),
+                // Medições realizadas button
+                Column(
+                  children: [
+                    FloatingActionButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const MeasurementsListPage(),
+                          ),
+                        );
+                      },
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      child: const Icon(Icons.list),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text('Medições realizadas'),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 40),
+            // Exit button
+            ElevatedButton.icon(
+              onPressed: () async {
+                await exitApp();
+                if (kIsWeb) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'No navegador, feche o separador para sair.',
+                      ),
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.exit_to_app),
+              label: const Text('Sair'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[700],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
