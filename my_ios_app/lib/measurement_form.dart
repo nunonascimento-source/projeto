@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'models/measurement.dart';
 import 'db/database_helper.dart';
+import 'services/api_service.dart';
 
 class MeasurementForm extends StatefulWidget {
   final Measurement? initialMeasurement;
@@ -110,6 +111,9 @@ class _MeasurementFormState extends State<MeasurementForm> {
       } else {
         await DatabaseHelper.instance.insertMeasurement(measurement);
       }
+
+      // Try to sync with backend (best-effort; keep local even if it fails)
+      await ApiService.uploadMeasurement(measurement);
     } catch (e, stacktrace) {
       if (!mounted) return;
       print('Error saving: $e');

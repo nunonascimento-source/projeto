@@ -126,7 +126,8 @@ class ApiService {
           'Authorization': 'Bearer $_token',
         },
         body: jsonEncode({
-          'date': measurement.date,
+          // Persist date as ISO string so the backend accepts it consistently
+          'date': measurement.date.toIso8601String(),
           'time': measurement.time,
           'glicemia': measurement.glicemia,
           'insulina': measurement.insulina,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'models/measurement.dart';
 import 'db/database_helper.dart';
 import 'measurement_form.dart';
+import 'services/api_service.dart';
 
 class MeasurementsListPage extends StatefulWidget {
   const MeasurementsListPage({super.key});
@@ -13,19 +14,29 @@ class MeasurementsListPage extends StatefulWidget {
 class _MeasurementsListPageState extends State<MeasurementsListPage> {
   late Future<List<Measurement>> _measurementsFuture;
 
+  Future<List<Measurement>> _fetchMeasurements() async {
+    // If authenticated, prefer server data; otherwise fall back to local storage
+    final isAuthed = await ApiService.restoreSession();
+    if (isAuthed) {
+      final remote = await ApiService.downloadMeasurements();
+      if (remote.isNotEmpty) return remote;
+    }
+    return DatabaseHelper.instance.getAllMeasurements();
+  }
+
   String _formatDate(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 
   void _reload() {
     setState(() {
-      _measurementsFuture = DatabaseHelper.instance.getAllMeasurements();
+      _measurementsFuture = _fetchMeasurements();
     });
   }
 
   @override
   void initState() {
     super.initState();
-    _measurementsFuture = DatabaseHelper.instance.getAllMeasurements();
+    _measurementsFuture = _fetchMeasurements();
   }
 
   @override
