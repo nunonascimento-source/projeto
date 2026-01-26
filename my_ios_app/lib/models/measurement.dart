@@ -1,5 +1,5 @@
 class Measurement {
-  int? id;
+  String? id; // Changed from int? to String? (backend uses UUID)
   DateTime date;
   String time; // store as HH:mm
   int glicemia;
@@ -28,7 +28,7 @@ class Measurement {
 
   factory Measurement.fromMap(Map<String, dynamic> map) {
     return Measurement(
-      id: map['id'] as int?,
+      id: map['id'] as String?, // Now accepts String from backend
       date: DateTime.parse(map['date'] as String),
       time: map['time'] as String,
       glicemia: map['glicemia'] as int,

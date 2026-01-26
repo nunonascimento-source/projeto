@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/measurement.dart';
@@ -108,7 +107,7 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> deleteMeasurement(int id) async {
+  Future<int> deleteMeasurement(String id) async {
     if (kIsWeb) {
       await _loadFromLocalStorage();
       final before = _webStorage.length;
