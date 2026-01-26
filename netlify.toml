@@ -1,6 +1,9 @@
 [build]
-  command = "cd my_ios_app && flutter build web --release"
+  command = "cd my_ios_app && flutter channel stable && flutter doctor && flutter build web --release"
   publish = "my_ios_app/build/web"
+
+[build.environment]
+  DART_SDK_VERSION = "3.0.0"
 
 [[redirects]]
   from = "/*"
