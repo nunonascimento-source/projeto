@@ -1,4 +1,5 @@
 [build]
+  command = ""
   publish = "my_ios_app/build/web"
 
 [[redirects]]
